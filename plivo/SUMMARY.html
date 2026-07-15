@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture Summary - Piggybacked Interleaved FEC</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --panel-bg: #1e293b;
+            --accent-cyan: #38bdf8;
+            --accent-purple: #c084fc;
+            --border-slate: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --code-inline: #fda4af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--bg-dark);
+            padding: 3rem 2rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 3rem;
+            border-bottom: 1px solid var(--border-slate);
+            padding-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .meta-tag {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .section-panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-slate);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .section-panel:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            color: var(--accent-cyan);
+        }
+
+        h2::before {
+            content: "// ";
+            color: var(--accent-purple);
+            font-family: monospace;
+            margin-right: 0.5rem;
+        }
+
+        p {
+            color: var(--text-secondary);
+            font-size: 0.975rem;
+            margin-bottom: 1rem;
+        }
+
+        p:last-child {
+            margin-bottom: 0;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--accent-purple);
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+
+        li strong {
+            color: var(--text-primary);
+        }
+
+        code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            background-color: rgba(15, 23, 42, 0.6);
+            color: var(--code-inline);
+            padding: 0.15rem 0.35rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            border: 1px solid var(--border-slate);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <span class="meta-tag">System Documentation</span>
+            <h1>The Flaky Network: Architecture Summary</h1>
+            <p style="color: var(--accent-purple); font-family: monospace; font-size: 0.875rem;">Pipeline: Interleaved Piggybacked FEC Engine</p>
+        </header>
+
+        <main class="grid">
+            <div class="section-panel">
+                <h2>1. System Landscape & Requirements</h2>
+                <p>The core objective is engineering a high-reliability transport scheme across a hostile network layer prone to random packet drops, jitter spikes, and packet reordering[cite: 1]. Strict operational boundary metrics require a deadline-miss rate <code>&lt;= 1%</code> while bounded safely within a maximum <code>&lt;= 2.0x</code> streaming bandwidth capacity budget[cite: 1]. The primary optimization target is the reduction of terminal playout delay[cite: 1].</p>
+            </div>
+
+            <div class="section-panel">
+                <h2>2. Architecture: Interleaved Piggybacked FEC</h2>
+                <p>To avoid the fatal real-time delay costs associated with feedback loops (ARQ) or network transmission overhead skips[cite: 1], this iteration leverages a <strong>Piggybacked Forward Error Correction (FEC)</strong> scheme[cite: 1].</p>
+                <p>Rather than multiplying independent packet streams across interfaces, the sender dynamically combines the active frame payload and the immediate historical frame payload into a single, cohesive compound packet layout[cite: 1]. This packs exactly two full 164-byte payload spaces into a single 328-byte datagram buffer[cite: 1].</p>
+            </div>
+
+            <div class="section-panel">
+                <h2>3. Strategic Operational Advantages</h2>
+                <ul>
+                    <li><strong>Deterministic Overhead Protection:</strong> Because every datagram strictly encapsulates two sequential frames, the network load maps perfectly onto the <code>2.0x</code> budget limit without demanding tricky scheduling logic or skipping patterns[cite: 1].</li>
+                    <li><strong>Stateful Frame Erasure Recovery:</strong> If a network hazard drops packet <code>N</code> entirely, the arrival of packet <code>N+1</code> instantly passes the missing packet history data directly into the receiver loop for immediate playback restoration[cite: 1].</li>
+                    <li><strong>Minimized Kernel Interrupt Overhead:</strong> Consolidating data into unified compound frames drops the active transmission frequency in half relative to naive multi-packet blast methodologies, reducing CPU scheduler thread wakes.</li>
+                </ul>
+            </div>
+
+            <div class="section-panel">
+                <h2>4. Receiver State Machine Execution</h2>
+                <p>The receiver tracks sequence counters sequentially[cite: 1]. Upon receiving a compound frame, it calculates whether a frame gap occurred by checking the backup frame data window[cite: 1]. If an item was missing from the stream, it isolates the historical chunk and dispatches it immediately to the player before processing the current frame space, ensuring smooth playout continuity[cite: 1].</p>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>
