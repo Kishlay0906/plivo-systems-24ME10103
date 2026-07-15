@@ -10,9 +10,9 @@
 #define PORT_OUT 47020
 
 int main(void) {
-    
+    // -------------------------------------------------------------------------
     // 1. Setup Input Socket (Listening for media from relay)
-   
+    // -------------------------------------------------------------------------
     int in_fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (in_fd < 0) {
         perror("Failed to create input socket");
@@ -30,9 +30,9 @@ int main(void) {
         return 1;
     }
 
-  
+    // -------------------------------------------------------------------------
     // 2. Setup Output Socket & Target Destination (Harness Player)
-    
+    // -------------------------------------------------------------------------
     int out_fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (out_fd < 0) {
         perror("Failed to create output socket");
@@ -45,9 +45,9 @@ int main(void) {
     player.sin_port = htons(PORT_OUT);
     player.sin_addr.s_addr = inet_addr(LOCALHOST);
 
-    
+    // -------------------------------------------------------------------------
     // 3. Core Forwarding Loop
-    
+    // -------------------------------------------------------------------------
     unsigned char pkt[BUFFER_SIZE];
 
     for (;;) {
